@@ -7,6 +7,8 @@ use List::Util 'min';
 use Mojo::Util qw(md5_sum steady_time);
 use Time::HiRes 'usleep';
 
+use constant DEBUG => $ENV{MOJO_REACTOR_DEBUG} || 0;
+
 sub again {
   croak 'Timer not active' unless my $timer = shift->{timers}{shift()};
   $timer->{time} = steady_time + $timer->{after};
@@ -14,7 +16,7 @@ sub again {
 
 sub io {
   my ($self, $handle, $cb) = @_;
-  $self->{io}{fileno $handle} = {cb => $cb};
+  $self->{io}{fileno $handle} = {cb => DEBUG ? [$cb, _trace(1)] : $cb};
   return $self->watch($handle, 1, 1);
 }
 
@@ -130,17 +132,39 @@ sub _next {
 sub _timer {
   my ($self, $recurring, $after, $cb) = @_;
 
-  my $id    = $self->_id;
-  my $timer = $self->{timers}{$id}
-    = {cb => $cb, after => $after, time => steady_time + $after};
+  my $id = $self->_id;
+  my $timer = $self->{timers}{$id} = {
+    cb => DEBUG ? [$cb, _trace(2)] : $cb,
+    after => $after,
+    time  => steady_time + $after
+  };
   $timer->{recurring} = $after if $recurring;
 
   return $id;
 }
 
+sub _trace {
+  my $start = shift;
+  my @frames;
+  while (my @trace = caller($start++)) { push @frames, \@trace }
+  return \@frames;
+}
+
 sub _try {
   my ($self, $what, $cb) = (shift, shift, shift);
-  eval { $self->$cb(@_); 1 } or $self->emit(error => "$what failed: $@");
+  if (DEBUG) {
+    ($cb, my $frames) = @$cb;
+    warn "-- $what $cb $$ started\n";
+    warn "  $_->[1] line $_->[2]\n" for @$frames;
+    my $started = [Time::HiRes::gettimeofday];
+    eval { $self->$cb(@_); 1 } or $self->emit(error => "$what failed: $@");
+    my $elapsed = $self->{diag}{$cb} += sprintf '%.6f',
+      Time::HiRes::tv_interval($started, [Time::HiRes::gettimeofday()]);
+    warn "-- $what $cb $$ (time spent ${elapsed}s)\n";
+  }
+  else {
+    eval { $self->$cb(@_); 1 } or $self->emit(error => "$what failed: $@");
+  }
 }
 
 1;
