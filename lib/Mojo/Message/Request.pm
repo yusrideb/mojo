@@ -2,12 +2,20 @@ package Mojo::Message::Request;
 use Mojo::Base 'Mojo::Message';
 
 use Mojo::Cookie::Request;
-use Mojo::Util qw(b64_encode b64_decode);
+use Mojo::Util qw(b64_encode b64_decode md5_sum);
 use Mojo::URL;
+use Sys::Hostname 'hostname';
+
+my $COUNTER = int(rand 0xffffff);
 
 has env => sub { {} };
 has method => 'GET';
 has [qw(proxy reverse_proxy)];
+has request_id => sub {
+  state $machine = md5_sum hostname;
+  $COUNTER = ($COUNTER + 1) % 0xffffff;
+  return md5_sum $machine . $$ . $COUNTER;
+};
 has url => sub { Mojo::URL->new };
 has via_proxy => 1;
 
@@ -307,6 +315,13 @@ HTTP request method, defaults to C<GET>.
   $req    = $req->proxy(Mojo::URL->new('http://127.0.0.1:3000'));
 
 Proxy URL for request.
+
+=head2 request_id
+
+  my $id = $req->request_id;
+  $req   = $req->request_id('123456789');
+
+Request ID, defaults to a reasonably unique value.
 
 =head2 reverse_proxy
 

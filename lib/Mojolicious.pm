@@ -128,7 +128,7 @@ sub dispatch {
     my $req    = $c->req;
     my $method = $req->method;
     my $path   = $req->url->path->to_abs_string;
-    $self->log->debug(qq{$method "$path"});
+    $c->helpers->log->debug(qq{$method "$path"});
     $c->helpers->timing->begin('mojo.timer');
   }
 
@@ -153,7 +153,8 @@ sub handler {
   $self->plugins->emit_chain(around_dispatch => $c);
 
   # Delayed response
-  $self->log->debug('Nothing has been rendered, expecting delayed response')
+  $c->helpers->log->debug(
+    'Nothing has been rendered, expecting delayed response')
     unless $c->stash->{'mojo.rendered'};
 }
 

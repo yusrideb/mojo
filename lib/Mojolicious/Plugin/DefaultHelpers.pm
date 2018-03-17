@@ -37,6 +37,10 @@ sub register {
   $app->helper(dumper => sub { shift; dumper @_ });
   $app->helper(include => sub { shift->render_to_string(@_) });
 
+  for my $level (qw(debug info warn error fatal)) {
+    $app->helper("log.$level" => sub { _log(shift, $level, @_) });
+  }
+
   $app->helper("reply.$_" => $self->can("_$_")) for qw(asset static);
 
   $app->helper('reply.exception' => sub { _development('exception', @_) });
@@ -94,7 +98,8 @@ sub _development {
   my ($page, $c, $e) = @_;
 
   my $app = $c->app;
-  $app->log->error($e = _exception($e) ? $e : Mojo::Exception->new($e)->inspect)
+  $c->helpers->log->error($e
+      = _exception($e) ? $e : Mojo::Exception->new($e)->inspect)
     if $page eq 'exception';
 
   # Filtered stash snapshot
@@ -149,10 +154,16 @@ sub _is_fresh {
   return $c->app->static->is_fresh($c, \%options);
 }
 
+sub _log {
+  my ($c, $level, $first) = (shift, shift, shift);
+  my $id = $c->req->request_id;
+  $c->app->log->$level("[$id] $first", @_);
+}
+
 sub _static {
   my ($c, $file) = @_;
   return !!$c->rendered if $c->app->static->serve($c, $file);
-  $c->app->log->debug(qq{Static file "$file" not found});
+  $c->helpers->log->debug(qq{Static file "$file" not found});
   return !$c->helpers->reply->not_found;
 }
 
@@ -410,6 +421,26 @@ response headers with L<Mojolicious::Static/"is_fresh">.
 
 Set C<layout> stash value, all additional key/value pairs get merged into the
 L</"stash">.
+
+=head2 log->debug
+
+TODO
+
+=head2 log->error
+
+TODO
+
+=head2 log->fatal
+
+TODO
+
+=head2 log->info
+
+TODO
+
+=head2 log->warn
+
+TODO
 
 =head2 param
 
