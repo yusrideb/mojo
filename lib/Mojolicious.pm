@@ -194,6 +194,11 @@ sub plugin {
   $self->plugins->register_plugin(shift, $self, @_);
 }
 
+sub server {
+  my ($self, $server) = @_;
+  $self->plugins->emit_hook(before_server_start => $server);
+}
+
 sub start {
   my $self = shift;
   $_->warmup for $self->static, $self->renderer;
@@ -252,6 +257,18 @@ Take a look at our excellent documentation in L<Mojolicious::Guides>!
 =head1 HOOKS
 
 L<Mojolicious> will emit the following hooks in the listed order.
+
+=head2 before_server_start
+
+Emitted right before the application server is started.
+
+  $app->hook(before_server_start => sub {
+    my $server = shift;
+    ...
+  });
+
+Useful for reconfiguring the application server dynamically or collecting server
+diagnostics information. (Passed the server object)
 
 =head2 after_build_tx
 
@@ -733,6 +750,12 @@ default exception handling.
 
 Load a plugin, for a full list of example plugins included in the
 L<Mojolicious> distribution see L<Mojolicious::Plugins/"PLUGINS">.
+
+=head2 server
+
+  $app->server($server);
+
+Emits the L</"before_server_start"> hook.
 
 =head2 start
 
