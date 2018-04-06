@@ -72,10 +72,14 @@ $log = '';
 $cb = $prefork->app->log->on(message => sub { $log .= pop });
 is $prefork->healthy, 0, 'no healthy workers';
 my @server;
-$prefork->app->hook(before_server_start => sub { push @server, shift });
+$prefork->app->hook(
+  before_server_start => sub {
+    my ($server, $app) = @_;
+    push @server, $server->workers, $app->mode;
+  }
+);
 $prefork->run;
-is_deeply \@server, [$prefork], 'hook has been emitted once';
-@server = ();
+is_deeply \@server, [4, 'development'], 'hook has been emitted once';
 is scalar @spawn, 4, 'four workers spawned';
 is scalar @reap,  4, 'four workers reaped';
 ok !!grep { $worker eq $_ } @spawn, 'worker has a heartbeat';

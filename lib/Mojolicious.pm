@@ -196,7 +196,7 @@ sub plugin {
 
 sub server {
   my ($self, $server) = @_;
-  $self->plugins->emit_hook(before_server_start => $server);
+  $self->plugins->emit_hook(before_server_start => $server, $self);
 }
 
 sub start {
@@ -260,15 +260,16 @@ L<Mojolicious> will emit the following hooks in the listed order.
 
 =head2 before_server_start
 
-Emitted right before the application server is started.
+Emitted right before the application server is started, for web servers that
+support it (like L<Mojo::Server::Daemon> and L<Mojo::Server::Prefork>).
 
   $app->hook(before_server_start => sub {
-    my $server = shift;
+    my ($server, $app) = @_;
     ...
   });
 
-Useful for reconfiguring the application server dynamically or collecting server
-diagnostics information. (Passed the server object)
+Useful for reconfiguring application servers dynamically or collecting server
+diagnostics information. (Passed the server and application object)
 
 =head2 after_build_tx
 
