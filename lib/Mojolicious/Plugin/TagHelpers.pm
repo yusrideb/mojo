@@ -166,21 +166,7 @@ sub _submit_button {
   return _tag('input', value => $value, @_, type => 'submit');
 }
 
-sub _tag {
-  my $tree = ['tag', shift, undef, undef];
-
-  # Content
-  if (ref $_[-1] eq 'CODE') { push @$tree, ['raw', pop->()] }
-  elsif (@_ % 2) { push @$tree, ['text', pop] }
-
-  # Attributes
-  my $attrs = $tree->[2] = {@_};
-  if (ref $attrs->{data} eq 'HASH' && (my $data = delete $attrs->{data})) {
-    @$attrs{map { y/_/-/; lc "data-$_" } keys %$data} = values %$data;
-  }
-
-  return Mojo::ByteStream->new(Mojo::DOM::HTML::_render($tree));
-}
+sub _tag { Mojo::ByteStream->new(Mojo::DOM->new_tag(@_)->to_string) }
 
 sub _tag_with_error {
   my ($c, $tag) = (shift, shift);

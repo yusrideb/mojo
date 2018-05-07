@@ -103,6 +103,25 @@ sub new {
   return @_ ? $self->parse(@_) : $self;
 }
 
+sub new_tag {
+  my ($self, $ast) = (shift, ['tag', shift, undef, undef]);
+
+  # Content
+  if (ref $_[-1] eq 'CODE') { push @$ast, ['raw', pop->()] }
+  elsif (@_ % 2) { push @$ast, ['text', pop] }
+
+  # Attributes
+  my $attrs = $ast->[2] = {@_};
+  if (ref $attrs->{data} eq 'HASH' && (my $data = delete $attrs->{data})) {
+    @$attrs{map { y/_/-/; lc "data-$_" } keys %$data} = values %$data;
+  }
+
+  my $new = $self->new;
+  $$new->tree(['root', $ast]);
+  $$new->xml($$self->xml) if blessed $self && $self->isa('Mojo::DOM');
+  return $new;
+}
+
 sub next      { $_[0]->_maybe($_[0]->_siblings(1, 1, 0)) }
 sub next_node { $_[0]->_maybe($_[0]->_siblings(0, 1, 0)) }
 

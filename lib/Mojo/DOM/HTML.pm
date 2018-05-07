@@ -164,7 +164,7 @@ sub parse {
   return $self->tree($tree);
 }
 
-sub render { _render($_[0]->tree, $_[0]->xml) }
+sub render { _render(@{$_[0]}{qw/tree xml/}) }
 
 sub _end {
   my ($end, $xml, $current) = @_;
