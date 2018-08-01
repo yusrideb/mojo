@@ -1,5 +1,6 @@
 .*
 *~
+_*
 !.gitignore
 !.appveyor.cmd
 !.appveyor.yml
@@ -13,6 +14,3 @@
 !MANIFEST.SKIP
 /META.*
 /MYMETA.*
-
-# From IDE
-_*
