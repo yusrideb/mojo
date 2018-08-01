@@ -15,4 +15,4 @@
 /MYMETA.*
 
 # From IDE
-_Deparsed_XSubs.pm
+_*
