@@ -54,6 +54,7 @@ sub store {
     domain   => $self->cookie_domain,
     expires  => $session->{expires},
     httponly => 1,
+    max_age  => $session->{expires} - time,
     path     => $self->cookie_path,
     secure   => $self->secure
   };
