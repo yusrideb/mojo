@@ -147,7 +147,8 @@ A callback used to deserialize sessions, defaults to L<Mojo::JSON/"j">.
 
 =head2 max_age
 
-  $sessions->max_age($bool);
+  my $bool  = $sessions->max_age;
+  $sessions = $sessions->max_age($bool);
   
 Set the C<max-age> on all session cookies. If "max_age" is set, session cookie
 will expires based on the number of seconds from attribute "default_expiration".
